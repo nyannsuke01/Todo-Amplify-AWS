@@ -6,6 +6,9 @@
 //
 
 import UIKit
+import SwiftUI
+import Amplify
+import AmplifyPlugins
 
 class ViewController: UIViewController {
 
@@ -14,6 +17,10 @@ class ViewController: UIViewController {
         // Do any additional setup after loading the view.
     }
 
+    @IBSegueAction func toSwiftUI(_ coder: NSCoder) -> UIViewController? {
+        return UIHostingController(coder: coder, rootView: ContentView3())
+
+    }
 
 }
 
