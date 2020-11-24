@@ -8,8 +8,11 @@
 import SwiftUI
 import Amplify
 import AmplifyPlugins
+import Combine
 
 struct ContentView3: View {
+
+    @State var todoSubscription: AnyCancellable?
 
     var body: some View {
         Text("Hello, World!")
@@ -19,26 +22,38 @@ struct ContentView3: View {
     }
 
     func performOnAppear() {
-       Amplify.DataStore.query(Todo.self,
-                               where: Todo.keys.priority.eq(Priority.high)) { result in
-           switch(result) {
-           case .success(let todos):
-               for todo in todos {
-                   print("==== Todo ====")
-                   print("Name: \(todo.name)")
-                   if let priority = todo.priority {
-                       print("Priority: \(priority)")
-                   }
-                   if let description = todo.description {
-                       print("Description: \(description)")
-                   }
-               }
-           case .failure(let error):
-               print("Could not query DataStore: \(error)")
-           }
-       }
+        subscribeTodos()
+    }
+
+    func subscribeTodos() {
+        self.todoSubscription
+            = Amplify.DataStore.publisher(for: Todo.self)
+            .sink(receiveCompletion: { completion in
+                print("Subscription has been completed: \(completion)")
+            }, receiveValue: { mutationEvent in
+                print("Subscription got this value: \(mutationEvent)")
+
+                do {
+                    let todo = try mutationEvent.decodeModel(as: Todo.self)
+
+                    switch mutationEvent.mutationType {
+                    case "create":
+                        print("Created: \(todo)")
+                    case "update":
+                        print("Updated: \(todo)")
+                    case "delete":
+                        print("Deleted: \(todo)")
+                    default:
+                        break
+                    }
+
+                } catch {
+                    print("Model could not be decoded: \(error)")
+                }
+            })
     }
 }
+
 
 struct ContentView3_Previews: PreviewProvider {
     static var previews: some View {
